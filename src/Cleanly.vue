@@ -6,21 +6,7 @@
         <h1>Cleanly</h1>
     </div>
     <div class="content row">
-        <div class="authentication"
-             v-if="!authenticated"
-        >
-            <it-input type="text" name="login" placeholder="Username"/>
-            <it-input type="password" name="password" placeholder="Password"/>
-            <it-button
-                name="submit"
-                type="primary"
-                icon="login"
-            >
-                Login
-            </it-button>
-
-
-        </div>
+        <Authenticate v-if="!authenticated"/>
     </div>
     <div class="footer row">
         <a href="#">Impressum</a>
@@ -29,6 +15,7 @@
 
 <script lang="ts">
 import {Options, Vue} from 'vue-class-component';
+import Authenticate from "@/Authenticate.vue";
 
 interface User {
     name: string,
@@ -57,6 +44,7 @@ interface Household {
 }
 
 @Options({
+    components: {Authenticate},
     data: () => ({
         household: {} as Household,
         user: {} as UserData,
@@ -99,6 +87,7 @@ export default class Cleanly extends Vue {
     flex-direction: row;
     height: 150px;
     border-bottom: #74a1ad 1px solid;
+    margin-bottom: 10px;
     box-shadow: 0 0 5px 5px #74a1ad;
     text-align: center;
 }
