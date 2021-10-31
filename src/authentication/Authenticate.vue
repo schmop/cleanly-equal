@@ -27,7 +27,7 @@ import {Options, Vue} from 'vue-class-component';
 import {Watch} from 'vue-property-decorator';
 import Login from "@/authentication/Login.vue";
 import Register from "@/authentication/Register.vue";
-import {UserData} from "@/Models/UserData";
+import {User} from "@/models/User";
 
 @Options({
     components: {Login, Register, Authenticate},
@@ -48,9 +48,9 @@ export default class Authenticate extends Vue {
         console.log("REGISTER");
     }
 
-    login(userData: UserData) {
+    login(user: User) {
         console.log("login!");
-        this.$emit('login', userData)
+        this.$emit('login', user);
         this.isLoading = true;
     }
 

@@ -51,27 +51,26 @@
 import {Options, Vue} from 'vue-class-component';
 import Authenticate from "@/authentication/Authenticate.vue";
 import HouseholdView from "@/HouseholdView.vue";
-import {Household} from "@/Models/Household";
-import {UserData} from "@/Models/UserData";
-import {Task} from "@/Models/Task";
-import {User} from "@/Models/User";
+import {Household} from "@/models/Household";
+import {Task} from "@/models/Task";
+import {User} from "@/models/User";
 
 @Options({
     components: {Authenticate, HouseholdView},
     data: () => ({
         household: null as Household | null,
-        user: {} as UserData | null,
+        user: {} as User | null,
         authenticated: false as boolean,
     })
 })
 
 export default class Cleanly extends Vue {
-    user: UserData | null = null;
+    user: User | null = null;
     authenticated: boolean = false;
     household: Household | null = null;
 
-    login(userData: UserData) {
-        this.user = userData;
+    login(user: User) {
+        this.user = user;
         this.authenticated = true;
         setTimeout(() => {
             this.household = {

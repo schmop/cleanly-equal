@@ -37,7 +37,8 @@
 </template>
 <script lang="ts">
 import {Options, Vue} from 'vue-class-component';
-import {UserData} from "@/Models/UserData";
+import {User} from "@/models/User";
+import {Message} from 'equal-vue';
 
 @Options({
     data: () => ({
@@ -48,9 +49,9 @@ import {UserData} from "@/Models/UserData";
 })
 
 export default class Login extends Vue {
-    mail: string = ''
-    password: string = ''
-    loading: boolean = false
+    mail: string = '';
+    password: string = '';
+    loading: boolean = false;
 
     setLoading(loading: boolean) {
         this.loading = loading;
@@ -61,21 +62,24 @@ export default class Login extends Vue {
         }
     }
 
-    login() {
+    async login() {
         this.setLoading(true);
-        setTimeout(() => {
+        try {
+            await window.client.signIn(this.mail, this.password);
             this.$emit(
                 'login',
                 {
-                    jwt: 'bla',
                     name: 'Schmop',
                     picture: '/bellycratsches.jpg',
                     mail: this.mail,
-                    uuid: "ab243-f123-asfd23-gdsf"
-                } as UserData
+                } as User
             );
-            this.setLoading(false);
-        }, 1000);
+            Message.success({text: 'Login successful!'});
+        } catch (e) {
+            Message.danger({text: "Could not login!\n" + e.message});
+            console.error(e);
+        }
+        this.setLoading(false);
     }
 }
 

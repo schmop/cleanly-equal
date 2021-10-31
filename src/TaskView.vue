@@ -23,7 +23,7 @@
 <script lang="ts">
 import {Options, Vue} from 'vue-class-component';
 import Progressbar from '@/Progressbar.vue';
-import {Task} from "@/Models/Task";
+import {Task} from "@/models/Task";
 import {PropType} from "vue";
 
 @Options({

@@ -17,7 +17,7 @@
 <script lang="ts">
 import {Options, Vue} from 'vue-class-component';
 import TaskView from '@/TaskView.vue';
-import {Household} from "@/Models/Household";
+import {Household} from "@/models/Household";
 import {PropType} from "vue";
 
 @Options({
