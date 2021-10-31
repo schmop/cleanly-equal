@@ -1,6 +1,6 @@
 <template>
     <div class="authentication">
-        <it-tabs>
+        <it-tabs ref="tabs">
             <it-tab
                 :disabled="isLoading"
                 title="Anmelden"
@@ -9,7 +9,7 @@
                 <Login
                     @loading="loading"
                     @stop-loading="stopLoading"
-                    @login="login"
+                    @login="onLogin"
                 />
             </it-tab>
             <it-tab
@@ -17,14 +17,15 @@
                 title="Registrieren"
                 box
             >
-                <Register />
+                <Register
+                    @signup="onSignup"
+                />
             </it-tab>
         </it-tabs>
     </div>
 </template>
 <script lang="ts">
 import {Options, Vue} from 'vue-class-component';
-import {Watch} from 'vue-property-decorator';
 import Login from "@/authentication/Login.vue";
 import Register from "@/authentication/Register.vue";
 import {User} from "@/models/User";
@@ -39,28 +40,20 @@ import {User} from "@/models/User";
 export default class Authenticate extends Vue {
     isLoading: boolean = false;
 
-    @Watch('action')
-    onPropertyChanged(value: string) {
-        console.log(value);
-    }
-
-    register() {
-        console.log("REGISTER");
-    }
-
-    login(user: User) {
-        console.log("login!");
+    onLogin(user: User) {
         this.$emit('login', user);
         this.isLoading = true;
     }
 
+    onSignup() {
+        (this.$refs.tabs as any).selectTab(0);
+    }
+
     loading() {
-        console.log("loading");
         this.isLoading = true;
     }
 
     stopLoading() {
-        console.log("stop Loading");
         this.isLoading = false;
     }
 }

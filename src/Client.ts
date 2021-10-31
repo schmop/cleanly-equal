@@ -8,8 +8,27 @@ export class Client {
     constructor() {
     }
 
-    signUp() {
+    async signUp(name: string, mail: string, password: string) {
+        const formData = new FormData();
+        formData.append('_name', name);
+        formData.append('_mail', mail);
+        formData.append('_password', password);
+        const response = await this.request('signup', {
+            body: formData,
+            method: 'POST',
+        });
+        if (response.status === 200) {
+            return;
+        }
+        let errors = "";
 
+        try {
+            errors = (await response.json())['errors'];
+        } catch (e) {
+            // noop
+        }
+
+        throw new Error("Could not sign up\n" + errors);
     }
 
     async signIn(mail: string, password: string) {
