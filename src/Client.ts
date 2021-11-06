@@ -1,11 +1,37 @@
 export class Client {
     private _token: null|string = null;
+    private _mail: null|string = null;
+    private get LOCALSTORAGE_STATE_KEY() {
+        return 'Cleanly.State';
+    }
 
     get HOST() {
-        return "http://127.0.0.1:8000";
+        return "https://127.0.0.1:8000";
     }
 
     constructor() {
+    }
+
+    async restoreState() {
+        const stateString = localStorage.getItem(this.LOCALSTORAGE_STATE_KEY);
+        if (null != stateString) {
+            const state = JSON.parse(stateString);
+            this._token = state.token;
+            this._mail = state.mail;
+            const response = await this.request('api/auth_check');
+            if (response.status !== 200) {
+                this._token = null;
+                this._mail = null;
+            }
+        }
+    }
+
+    async dashboardInfo() {
+        const response = await this.request('api/dashboard');
+        if (response.status === 200) {
+            return await response.json();
+        }
+        throw new Error('Could not authenticate, code: ' + response.status);
     }
 
     async signUp(name: string, mail: string, password: string) {
@@ -46,11 +72,24 @@ export class Client {
             const data = await response.json();
             if ('token' in data) {
                 this._token = data.token;
+                localStorage.setItem(this.LOCALSTORAGE_STATE_KEY, JSON.stringify({'mail': mail, 'token': data.token}));
 
                 return;
             }
         }
         throw new Error('Could not authenticate, code: ' + response.status);
+    }
+
+    logout() {
+        localStorage.removeItem(this.LOCALSTORAGE_STATE_KEY);
+    }
+
+    isAuthenticated() {
+        return null != this._token;
+    }
+
+    getMail() {
+        return this._mail;
     }
 
     private async sendJson(endpoint: string, data: object, init: any) {
@@ -63,7 +102,7 @@ export class Client {
         return await this.request(endpoint, init);
     }
 
-    private async request(endpoint: string, init: any) {
+    private async request(endpoint: string, init: any = {}) {
         if (!(init.headers instanceof Headers)) {
             init.headers = new Headers(init.headers ?? {});
         }

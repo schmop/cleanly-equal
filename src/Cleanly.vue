@@ -11,13 +11,28 @@
         <div class="logo-wrapper">
             <img class="logo" src="broom.png"/>
         </div>
-        <it-button
-            type="black"
-            outlined
-            icon="menu"
-            size="big"
+        <it-dropdown
+            :clickable="true"
+            placement="bottom-right"
         >
-        </it-button>
+            <it-button
+                type="black"
+                outlined
+                icon="menu"
+                size="big"
+            >
+            </it-button>
+            <template v-slot:menu>
+                <it-dropdown-menu>
+                    <it-dropdown-item
+                        icon="logout"
+                        @click="logout"
+                    >
+                        Logout
+                    </it-dropdown-item>
+                </it-dropdown-menu>
+            </template>
+        </it-dropdown>
     </div>
     <div
         v-else
@@ -33,13 +48,8 @@
             v-if="!authenticated"
             @login="login"
         />
-        <it-loading
-            v-else-if="null == household"
-            color="#74a1ad"
-        />
-        <HouseholdView
+        <Dashboard
             v-else
-            :household="household"
         />
     </div>
     <div class="footer row">
@@ -52,11 +62,11 @@ import {Options, Vue} from 'vue-class-component';
 import Authenticate from "@/authentication/Authenticate.vue";
 import HouseholdView from "@/HouseholdView.vue";
 import {Household} from "@/models/Household";
-import {Task} from "@/models/Task";
 import {User} from "@/models/User";
+import Dashboard from "@/Dashboard.vue";
 
 @Options({
-    components: {Authenticate, HouseholdView},
+    components: {Dashboard, Authenticate, HouseholdView},
     data: () => ({
         household: null as Household | null,
         user: {} as User | null,
@@ -65,47 +75,23 @@ import {User} from "@/models/User";
 })
 
 export default class Cleanly extends Vue {
-    user: User | null = null;
-    authenticated: boolean = false;
+    user: User | null = {
+        name: 'Schmop',
+        picture: '/bellycratsches.jpg',
+        mail: window.client.getMail(),
+    } as User;
+    authenticated: boolean = window.client.isAuthenticated();
     household: Household | null = null;
 
     login(user: User) {
         this.user = user;
         this.authenticated = true;
-        setTimeout(() => {
-            this.household = {
-                name: "Chaos WG",
-                picture: null,
-                tasks: [
-                    {
-                        assignedTo: this.user,
-                        duration: 14 * 24 * 60, // 2 weeks in minutes
-                        icon: 'local_laundry_service',
-                        color: '#07d85b',
-                        lastComplete: null,
-                        name: 'Wäsche waschen',
-                        uuid: '1298asdkjh23-asfdkjh21378asd'
-                    },
-                    {
-                        assignedTo: this.user,
-                        duration: 14 * 24 * 60, // 2 weeks in minutes
-                        icon: 'cleaning_services',
-                        color: '#3051ff',
-                        lastComplete: this.someDayInThePast(),
-                        name: 'Fegen',
-                        uuid: '129asdgfdgfd378asd'
-                    },
-                ] as Task[],
-                users: [] as User[]
-            } as Household;
-        }, 1000);
     }
 
-    someDayInThePast() {
-        let date = new Date();
-        date.setDate(date.getDate() - 7);
-
-        return date;
+    logout() {
+        this.user = null;
+        this.authenticated = false;
+        window.client.logout();
     }
 }
 
