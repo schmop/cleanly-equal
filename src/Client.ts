@@ -6,13 +6,13 @@ export class Client {
     }
 
     get HOST() {
-        return "https://127.0.0.1:8000";
+        return "https://localhost:8000";
     }
 
     constructor() {
     }
 
-    async restoreState() {
+    async restoreState(): Promise<void> {
         const stateString = localStorage.getItem(this.LOCALSTORAGE_STATE_KEY);
         if (null != stateString) {
             const state = JSON.parse(stateString);
@@ -26,7 +26,18 @@ export class Client {
         }
     }
 
-    async dashboardInfo() {
+    async createHousehold(newHouseholdName: string): Promise<boolean> {
+        const formData = new FormData();
+        formData.append('name', newHouseholdName);
+        const response = await this.request('api/household/create', {
+            body: formData,
+            method: 'POST',
+        });
+
+        return response.status === 200;
+    }
+
+    async dashboardInfo(): Promise<any> {
         const response = await this.request('api/dashboard');
         if (response.status === 200) {
             return await response.json();
@@ -34,7 +45,7 @@ export class Client {
         throw new Error('Could not authenticate, code: ' + response.status);
     }
 
-    async signUp(name: string, mail: string, password: string) {
+    async signUp(name: string, mail: string, password: string): Promise<void> {
         const formData = new FormData();
         formData.append('_name', name);
         formData.append('_mail', mail);
@@ -57,7 +68,7 @@ export class Client {
         throw new Error("Could not sign up\n" + errors);
     }
 
-    async signIn(mail: string, password: string) {
+    async signIn(mail: string, password: string): Promise<void> {
         const response = await this.sendJson(
             'api/login_check',
             {
@@ -80,19 +91,19 @@ export class Client {
         throw new Error('Could not authenticate, code: ' + response.status);
     }
 
-    logout() {
+    logout(): void {
         localStorage.removeItem(this.LOCALSTORAGE_STATE_KEY);
     }
 
-    isAuthenticated() {
+    isAuthenticated(): boolean {
         return null != this._token;
     }
 
-    getMail() {
+    getMail(): null|string {
         return this._mail;
     }
 
-    private async sendJson(endpoint: string, data: object, init: any) {
+    private async sendJson(endpoint: string, data: object, init: any): Promise<Response> {
         if (!(init.headers instanceof Headers)) {
             init.headers = new Headers(init.headers ?? {});
         }
@@ -102,7 +113,7 @@ export class Client {
         return await this.request(endpoint, init);
     }
 
-    private async request(endpoint: string, init: any = {}) {
+    private async request(endpoint: string, init: any = {}): Promise<Response> {
         if (!(init.headers instanceof Headers)) {
             init.headers = new Headers(init.headers ?? {});
         }
