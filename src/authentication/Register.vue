@@ -70,7 +70,12 @@ import {Message} from 'equal-vue';
         passwordRetype: '' as string,
         loading: false as boolean,
     }),
-    props: {}
+    props: {},
+    emits: [
+        'loading',
+        'stop-loading',
+        'signup',
+    ]
 })
 
 export default class Register extends Vue {

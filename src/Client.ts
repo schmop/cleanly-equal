@@ -45,6 +45,29 @@ export class Client {
         throw new Error('Could not authenticate, code: ' + response.status);
     }
 
+    async setHouseholdColor(householdId: number, color: string): Promise<boolean> {
+        const formData = new FormData();
+        formData.append('id', householdId.toString());
+        formData.append('color', color);
+        const response = await this.request('api/household/color', {
+            body: formData,
+            method: 'POST',
+        });
+
+        return response.status === 200;
+    }
+
+    async removeHousehold(householdId: number) {
+        const formData = new FormData();
+        formData.append('id', householdId.toString());
+        const response = await this.request('api/household', {
+            body: formData,
+            method: 'DELETE',
+        });
+
+        return response.status === 200;
+    }
+
     async signUp(name: string, mail: string, password: string): Promise<void> {
         const formData = new FormData();
         formData.append('_name', name);

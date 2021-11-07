@@ -1,19 +1,26 @@
 <template>
-    <div class="row">
-        <it-loading
-            v-if="null == households"
-        />
-        <p v-else-if="households.length === 0">
-            No households yet. Create one or join an existing household!
-        </p>
-        <template v-else>
-            <HouseholdView
-                v-for="household in households"
-                :household="household"
-                :key="household.id"
-            />
-        </template>
+    <div
+        class="row"
+        v-if="null == households"
+    >
+        <it-loading/>
     </div>
+    <p v-else-if="households.length === 0">
+        No households yet. Create one or join an existing household!
+    </p>
+    <template v-else>
+        <div
+            class="row"
+            v-for="household in households"
+            :key="household.id"
+        >
+            <HouseholdView
+                :household="household"
+                @change-color="changeColor(household.id, $event)"
+                @delete="deleteHousehold(household.id)"
+            />
+        </div>
+    </template>
     <div class="row">
         <it-button
             name="submit"
@@ -84,6 +91,31 @@ export default class Dashboard extends Vue {
 
     async mounted() {
         await this.fetchDashboardInfo();
+    }
+
+    async changeColor(householdId: number, color: string) {
+        if (await window.client.setHouseholdColor(householdId, color)) {
+            Message.success({text: 'Color change successful!'});
+            if (null != this.households) {
+                const houseHold = this.households.find(household => household.id === householdId);
+                if (houseHold) {
+                    houseHold.color = color;
+                }
+            }
+        } else {
+            Message.danger({text: 'There was a problem changing the color!'});
+        }
+    }
+
+    async deleteHousehold(householdId: number) {
+        if (await window.client.removeHousehold(householdId)) {
+            Message.success({text: 'Household successfully removed!'});
+            if (null != this.households) {
+                this.households = this.households.filter(household => household.id !== householdId);
+            }
+        } else {
+            Message.danger({text: 'Could not delete household!'});
+        }
     }
 
     async fetchDashboardInfo() {
