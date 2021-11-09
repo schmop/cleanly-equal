@@ -23,12 +23,22 @@
     </template>
     <div class="row">
         <it-button
+            class="margin"
             name="submit"
             type="primary"
             icon="add_circle"
             @click="openNewHouseholdModal"
         >
             Create Household
+        </it-button>
+        <it-button
+            class="margin"
+            name="submit"
+            type="primary"
+            icon="group_add"
+            @click="openJoinHouseholdModal"
+        >
+            Join Household
         </it-button>
     </div>
     <it-modal v-model="newHouseholdModal">
@@ -64,6 +74,39 @@
             </it-button>
         </template>
     </it-modal>
+    <it-modal v-model="joinHouseholdModal">
+        <template #header>
+            New Household
+        </template>
+        <template #body>
+            <it-input
+                labelTop="Invite token"
+                prefix-icon="create"
+                type="text"
+                placeholder="Paste token here"
+                @keypress.enter="joinHousehold"
+                :disabled="householdLoading"
+                v-model="inviteToken"
+            />
+        </template>
+        <template #actions>
+            <it-button
+                type="primary"
+                icon="group_add"
+                @click="joinHousehold"
+                :loading="householdLoading"
+            >
+                Join
+            </it-button>
+            <it-button
+                icon="cancel"
+                @click="joinHouseholdModal = false"
+                :loading="householdLoading"
+            >
+                Cancel
+            </it-button>
+        </template>
+    </it-modal>
 </template>
 
 <script lang="ts">
@@ -77,8 +120,10 @@ import {Message} from 'equal-vue';
     data: () => ({
         households: [] as Household[],
         newHouseholdModal: false as boolean,
+        joinHouseholdModal: false as boolean,
         householdLoading: false as boolean,
         newHouseholdName: "" as string,
+        inviteToken: "" as string,
     }),
     props: {}
 })
@@ -86,8 +131,10 @@ import {Message} from 'equal-vue';
 export default class Dashboard extends Vue {
     households: Household[]|null = null;
     newHouseholdModal: boolean = false;
+    joinHouseholdModal: boolean = false;
     householdLoading: boolean = false;
     newHouseholdName: string = "";
+    inviteToken: string = "";
 
     async mounted() {
         await this.fetchDashboardInfo();
@@ -134,8 +181,24 @@ export default class Dashboard extends Vue {
         this.householdLoading = false;
     }
 
+    async joinHousehold() {
+        this.householdLoading = true;
+        if (await window.client.joinHousehold(this.inviteToken)) {
+            Message.success({text: 'Household joined successfully!'});
+            this.joinHouseholdModal = false;
+            await this.fetchDashboardInfo();
+        } else {
+            Message.danger({text: 'Household could not be joined!'});
+        }
+        this.householdLoading = false;
+    }
+
     openNewHouseholdModal() {
         this.newHouseholdModal = true;
+    }
+
+    openJoinHouseholdModal() {
+        this.joinHouseholdModal = true;
     }
 }
 </script>
@@ -144,5 +207,8 @@ export default class Dashboard extends Vue {
     .row {
         display: flex;
         justify-content: center;
+    }
+    .margin {
+        margin: 0 10px;
     }
 </style>

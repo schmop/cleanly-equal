@@ -11,14 +11,20 @@
             <it-dropdown
                 :clickable="true"
                 placement="bottom-right"
+                class="icon-button"
             >
                 <it-icon
                     outlined
                     name="more_vert"
-                    class="icon-button"
                 />
                 <template v-slot:menu>
                     <it-dropdown-menu>
+                        <it-dropdown-item
+                            icon="link"
+                            @click="generateAndCopyInvite"
+                        >
+                            Copy invite token
+                        </it-dropdown-item>
                         <it-popover
                             borderless
                             placement="left"
@@ -85,6 +91,7 @@ import TaskView from '@/TaskView.vue';
 import {Household} from "@/models/Household";
 import {defineComponent, PropType} from "vue";
 import {TColorData} from 'equal-vue/src/components/colorpicker/types';
+import {Message} from "equal-vue";
 
 export default defineComponent({
     components: {
@@ -106,7 +113,7 @@ export default defineComponent({
     },
     mounted() {
         this.$watch(() => (this.$refs.colorPicker as any).show, (show: boolean) => {
-            if (!show) {
+            if (!show && this.color !== this.household?.color) {
                 this.$emit('change-color', this.color);
             }
         });
@@ -117,6 +124,18 @@ export default defineComponent({
         }
     },
     methods: {
+        async generateAndCopyInvite() {
+            try {
+                if (null != this.household?.id) {
+                    const url = await window.client.fetchInviteLink(this.household.id);
+                    await navigator.clipboard.writeText(url);
+                    Message.success({text: 'Invite token copied successfully!'});
+                    console.log(url);
+                }
+            } catch (e) {
+                Message.danger({text: 'Error copying invite token: ' + e.toString()});
+            }
+        },
         setColor(color: TColorData) {
             this.color = color.hex;
         },

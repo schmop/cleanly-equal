@@ -47,9 +47,8 @@ export class Client {
 
     async setHouseholdColor(householdId: number, color: string): Promise<boolean> {
         const formData = new FormData();
-        formData.append('id', householdId.toString());
         formData.append('color', color);
-        const response = await this.request('api/household/color', {
+        const response = await this.request(`api/household/${householdId}/color`, {
             body: formData,
             method: 'POST',
         });
@@ -57,15 +56,34 @@ export class Client {
         return response.status === 200;
     }
 
+    async joinHousehold(inviteToken: string) {
+        const response = await this.request(`api/household/${inviteToken}/join`, {
+            method: 'POST',
+        });
+
+        return response.status === 200;
+    }
+
     async removeHousehold(householdId: number) {
-        const formData = new FormData();
-        formData.append('id', householdId.toString());
-        const response = await this.request('api/household', {
-            body: formData,
+        const response = await this.request(`api/household/${householdId}`, {
             method: 'DELETE',
         });
 
         return response.status === 200;
+    }
+
+    async fetchInviteLink(householdId: number): Promise<string> {
+        const response = await this.request(`api/household/${householdId}/invite`, {
+            method: 'POST',
+        });
+
+        if (response.status !== 200) {
+            throw new Error("Error generating invite link!");
+        }
+
+        const data = await response.json();
+
+        return data['token'];
     }
 
     async signUp(name: string, mail: string, password: string): Promise<void> {
