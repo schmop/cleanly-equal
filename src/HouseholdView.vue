@@ -27,6 +27,7 @@
                         </it-dropdown-item>
                         <it-popover
                             borderless
+                            class="w-100 it-dropdown-item"
                             placement="left"
                             ref="colorPicker"
                             @click.stop
@@ -89,11 +90,13 @@
 <script lang="ts">
 import TaskView from '@/TaskView.vue';
 import {Household} from "@/models/Household";
+import {User} from "@/models/User";
 import {defineComponent, PropType} from "vue";
 import {TColorData} from 'equal-vue/src/components/colorpicker/types';
 import {Message} from "equal-vue";
 
 export default defineComponent({
+    name: 'household-view',
     components: {
         TaskView,
     },
@@ -106,7 +109,16 @@ export default defineComponent({
         confirmModal: false,
     }),
     props: {
-        household: Object as PropType<Household>
+        household: Object as PropType<Household>,
+        user: Object as PropType<User>,
+    },
+    computed: {
+        isAdmin() {
+            return this.user?.mail === this.household?.adminMail && null != this.household?.adminMail;
+        },
+        style() {
+            return 'background-color: ' + this.color;
+        },
     },
     beforeMount() {
         this.color = this.household?.color || this.color;
@@ -117,11 +129,6 @@ export default defineComponent({
                 this.$emit('change-color', this.color);
             }
         });
-    },
-    computed: {
-        style() {
-            return 'background-color: ' + this.color;
-        }
     },
     methods: {
         async generateAndCopyInvite() {
@@ -185,5 +192,15 @@ export default defineComponent({
 .item-danger {
     background-color: #f93155;
     color: white;
+}
+
+</style>
+
+<style>
+.w-100 {
+    overflow: visible !important;
+}
+.w-100 .it-dropdown-item {
+    padding: 0;
 }
 </style>

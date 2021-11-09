@@ -15,6 +15,7 @@
             :key="household.id"
         >
             <HouseholdView
+                :user="user"
                 :household="household"
                 @change-color="changeColor(household.id, $event)"
                 @delete="deleteHousehold(household.id)"
@@ -110,13 +111,20 @@
 </template>
 
 <script lang="ts">
-import {Options, Vue} from 'vue-class-component';
 import {Household} from "@/models/Household";
 import HouseholdView from "@/HouseholdView.vue";
 import {Message} from 'equal-vue';
+import {defineComponent, PropType} from "vue";
+import {User} from "@/models/User";
 
-@Options({
-    components: {HouseholdView},
+export default defineComponent({
+    name: 'dashboard',
+    components: {
+        HouseholdView
+    },
+    props: {
+        user: Object as PropType<User>
+    },
     data: () => ({
         households: [] as Household[],
         newHouseholdModal: false as boolean,
@@ -125,82 +133,66 @@ import {Message} from 'equal-vue';
         newHouseholdName: "" as string,
         inviteToken: "" as string,
     }),
-    props: {}
-})
-
-export default class Dashboard extends Vue {
-    households: Household[]|null = null;
-    newHouseholdModal: boolean = false;
-    joinHouseholdModal: boolean = false;
-    householdLoading: boolean = false;
-    newHouseholdName: string = "";
-    inviteToken: string = "";
-
     async mounted() {
         await this.fetchDashboardInfo();
-    }
-
-    async changeColor(householdId: number, color: string) {
-        if (await window.client.setHouseholdColor(householdId, color)) {
-            Message.success({text: 'Color change successful!'});
-            if (null != this.households) {
-                const houseHold = this.households.find(household => household.id === householdId);
-                if (houseHold) {
-                    houseHold.color = color;
+    },
+    methods: {
+        async changeColor(householdId: number, color: string) {
+            if (await window.client.setHouseholdColor(householdId, color)) {
+                Message.success({text: 'Color change successful!'});
+                if (null != this.households) {
+                    const houseHold = this.households.find(household => household.id === householdId);
+                    if (houseHold) {
+                        houseHold.color = color;
+                    }
                 }
+            } else {
+                Message.danger({text: 'There was a problem changing the color!'});
             }
-        } else {
-            Message.danger({text: 'There was a problem changing the color!'});
-        }
-    }
-
-    async deleteHousehold(householdId: number) {
-        if (await window.client.removeHousehold(householdId)) {
-            Message.success({text: 'Household successfully removed!'});
-            if (null != this.households) {
-                this.households = this.households.filter(household => household.id !== householdId);
+        },
+        async deleteHousehold(householdId: number) {
+            if (await window.client.removeHousehold(householdId)) {
+                Message.success({text: 'Household successfully removed!'});
+                if (null != this.households) {
+                    this.households = this.households.filter(household => household.id !== householdId);
+                }
+            } else {
+                Message.danger({text: 'Could not delete household!'});
             }
-        } else {
-            Message.danger({text: 'Could not delete household!'});
+        },
+        async fetchDashboardInfo() {
+            this.households = await window.client.dashboardInfo();
+        },
+        async createNewHousehold() {
+            this.householdLoading = true;
+            if (await window.client.createHousehold(this.newHouseholdName)) {
+                Message.success({text: 'Household created successfully!'});
+                this.newHouseholdModal = false;
+                await this.fetchDashboardInfo();
+            } else {
+                Message.danger({text: 'Household could not be created!'});
+            }
+            this.householdLoading = false;
+        },
+        async joinHousehold() {
+            this.householdLoading = true;
+            if (await window.client.joinHousehold(this.inviteToken)) {
+                Message.success({text: 'Household joined successfully!'});
+                this.joinHouseholdModal = false;
+                await this.fetchDashboardInfo();
+            } else {
+                Message.danger({text: 'Household could not be joined!'});
+            }
+            this.householdLoading = false;
+        },
+        openNewHouseholdModal() {
+            this.newHouseholdModal = true;
+        },
+        openJoinHouseholdModal() {
+            this.joinHouseholdModal = true;
         }
     }
-
-    async fetchDashboardInfo() {
-        this.households = await window.client.dashboardInfo();
-    }
-
-    async createNewHousehold() {
-        this.householdLoading = true;
-        if (await window.client.createHousehold(this.newHouseholdName)) {
-            Message.success({text: 'Household created successfully!'});
-            this.newHouseholdModal = false;
-            await this.fetchDashboardInfo();
-        } else {
-            Message.danger({text: 'Household could not be created!'});
-        }
-        this.householdLoading = false;
-    }
-
-    async joinHousehold() {
-        this.householdLoading = true;
-        if (await window.client.joinHousehold(this.inviteToken)) {
-            Message.success({text: 'Household joined successfully!'});
-            this.joinHouseholdModal = false;
-            await this.fetchDashboardInfo();
-        } else {
-            Message.danger({text: 'Household could not be joined!'});
-        }
-        this.householdLoading = false;
-    }
-
-    openNewHouseholdModal() {
-        this.newHouseholdModal = true;
-    }
-
-    openJoinHouseholdModal() {
-        this.joinHouseholdModal = true;
-    }
-}
+});
 </script>
 
 <style scoped>

@@ -49,6 +49,7 @@
             @login="login"
         />
         <Dashboard
+            :user="user"
             v-else
         />
     </div>
