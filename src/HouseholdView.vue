@@ -19,39 +19,41 @@
                 />
                 <template v-slot:menu>
                     <it-dropdown-menu>
-                        <it-dropdown-item
-                            icon="link"
-                            @click="generateAndCopyInvite"
-                        >
-                            Copy invite token
-                        </it-dropdown-item>
-                        <it-popover
-                            borderless
-                            class="w-100 it-dropdown-item"
-                            placement="left"
-                            ref="colorPicker"
-                            @click.stop
-                        >
+                        <template v-if="isAdmin">
                             <it-dropdown-item
-                                icon="palette"
+                                icon="link"
+                                @click="generateAndCopyInvite"
                             >
-                                Change color
+                                Copy invite token
                             </it-dropdown-item>
-                            <template #content>
-                                <it-colorpicker
-                                    :value="color"
-                                    @change="setColor"
-                                    disableAlpha
-                                />
-                            </template>
-                        </it-popover>
-                        <it-dropdown-item
-                            icon="delete"
-                            @click="confirmModal = true"
-                            class="item-danger"
-                        >
-                            Delete
-                        </it-dropdown-item>
+                            <it-popover
+                                borderless
+                                class="w-100 it-dropdown-item"
+                                placement="left"
+                                ref="colorPicker"
+                                @click.stop
+                            >
+                                <it-dropdown-item
+                                    icon="palette"
+                                >
+                                    Change color
+                                </it-dropdown-item>
+                                <template #content>
+                                    <it-colorpicker
+                                        :value="color"
+                                        @change="setColor"
+                                        disableAlpha
+                                    />
+                                </template>
+                            </it-popover>
+                            <it-dropdown-item
+                                icon="delete"
+                                @click="confirmModal = true"
+                                class="item-danger"
+                            >
+                                Delete
+                            </it-dropdown-item>
+                        </template>
                     </it-dropdown-menu>
                 </template>
             </it-dropdown>
@@ -114,7 +116,7 @@ export default defineComponent({
     },
     computed: {
         isAdmin() {
-            return this.user?.mail === this.household?.adminMail && null != this.household?.adminMail;
+            return this.user?.mail === this.household?.admin && null != this.household?.admin;
         },
         style() {
             return 'background-color: ' + this.color;
@@ -124,11 +126,13 @@ export default defineComponent({
         this.color = this.household?.color || this.color;
     },
     mounted() {
-        this.$watch(() => (this.$refs.colorPicker as any).show, (show: boolean) => {
-            if (!show && this.color !== this.household?.color) {
-                this.$emit('change-color', this.color);
-            }
-        });
+        if (this.$refs.colorPicker) {
+            this.$watch(() => (this.$refs.colorPicker as any).show, (show: boolean) => {
+                if (!show && this.color !== this.household?.color) {
+                    this.$emit('change-color', this.color);
+                }
+            });
+        }
     },
     methods: {
         async generateAndCopyInvite() {

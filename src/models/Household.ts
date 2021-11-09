@@ -8,5 +8,5 @@ export interface Household {
     users: User[],
     tasks: Task[],
     picture?: string | null,
-    adminMail?: string | null,
+    admin?: string | null,
 }
