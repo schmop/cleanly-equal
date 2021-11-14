@@ -26,6 +26,20 @@ export class Client {
         }
     }
 
+    async addNewTask(householdId: number, taskname: string, icon: string, duration: number) {
+        const formData = new FormData();
+        formData.append('name', taskname);
+        formData.append('household_id', householdId.toString());
+        formData.append('icon', icon);
+        formData.append('duration', duration.toString());
+        const response = await this.request('api/task/create', {
+            body: formData,
+            method: 'POST',
+        });
+
+        return response.status === 200;
+    }
+
     async createHousehold(newHouseholdName: string): Promise<boolean> {
         const formData = new FormData();
         formData.append('name', newHouseholdName);

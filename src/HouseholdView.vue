@@ -8,55 +8,12 @@
                 :src="household.picture"
             />
             <p class="household-name">{{ household.name }}</p>
-            <it-dropdown
-                :clickable="true"
-                placement="bottom-right"
-                class="icon-button"
-            >
-                <it-icon
-                    outlined
-                    name="more_vert"
-                />
-                <template v-slot:menu>
-                    <it-dropdown-menu>
-                        <template v-if="isAdmin">
-                            <it-dropdown-item
-                                icon="link"
-                                @click="generateAndCopyInvite"
-                            >
-                                Copy invite token
-                            </it-dropdown-item>
-                            <it-popover
-                                borderless
-                                class="w-100 it-dropdown-item"
-                                placement="left"
-                                ref="colorPicker"
-                                @click.stop
-                            >
-                                <it-dropdown-item
-                                    icon="palette"
-                                >
-                                    Change color
-                                </it-dropdown-item>
-                                <template #content>
-                                    <it-colorpicker
-                                        :value="color"
-                                        @change="setColor"
-                                        disableAlpha
-                                    />
-                                </template>
-                            </it-popover>
-                            <it-dropdown-item
-                                icon="delete"
-                                @click="confirmModal = true"
-                                class="item-danger"
-                            >
-                                Delete
-                            </it-dropdown-item>
-                        </template>
-                    </it-dropdown-menu>
-                </template>
-            </it-dropdown>
+            <HouseholdContextMenu
+                :is-admin="isAdmin"
+                :household="household"
+                @change-color="$emit('change-color', $event)"
+                @delete="$emit('delete')"
+            />
         </div>
         <template
             v-if="household.tasks && household.tasks.length > 0"
@@ -68,25 +25,87 @@
             />
         </template>
         <p v-else>No tasks yet!</p>
-        <it-modal v-model="confirmModal">
-            <template #header>
-                <h3>Household</h3>
-            </template>
-            <template #body>
-                This household will be deleted permanently.<br/>
-                All members are being kicked and all data regarding this household will be lost.
-            </template>
-            <template #actions>
-                <it-button @click="confirmModal = false">Cancel</it-button>
-                <it-button
-                    type="danger"
-                    @click="deleteHousehold"
-                >
-                    Delete
-                </it-button>
-            </template>
-        </it-modal>
+        <div
+            class="household-footer"
+            v-if="isAdmin"
+        >
+            <it-button
+                class="dark-font"
+                icon="add"
+                type="default"
+                @click="newTaskModal = true"
+            >
+                Task hinzufügen
+            </it-button>
+        </div>
     </div>
+    <it-modal v-model="newTaskModal">
+        <template #header>
+            New Task
+        </template>
+        <template #body>
+            <it-input
+                labelTop="Name"
+                prefix-icon="create"
+                type="text"
+                placeholder="Task name"
+                @keypress.enter="addNewTask"
+                :disabled="loading"
+                v-model="newTaskName"
+            />
+            <it-select
+                class="max-width"
+                v-model="newTaskIcon"
+                :options="taskIcons"
+                label-top="Icon"
+                :disabled="loading"
+            >
+                <template #selected-option="{props}">
+                    <div class="vertical-center">
+                        <it-icon
+                            :name="props.modelValue.value"
+                            outlined
+                        />
+                        <span class="padding-left">
+                            {{ props.modelValue.name }}
+                        </span>
+                    </div>
+                </template>
+                <template #option="{option}">
+                    <div class="vertical-center">
+                        <it-icon
+                            :name="option.value"
+                            outlined
+                        />
+                        <span class="padding-left">
+                            {{ option.name }}
+                        </span>
+                    </div>
+                </template>
+            </it-select>
+            <interval-picker
+                label-top="Interval"
+                v-model="newTaskInterval"
+            />
+        </template>
+        <template #actions>
+            <it-button
+                type="primary"
+                icon="add_circle"
+                @click="addNewTask"
+                :loading="loading"
+            >
+                Add
+            </it-button>
+            <it-button
+                icon="cancel"
+                @click="newTaskModal = false"
+                :loading="loading"
+            >
+                Cancel
+            </it-button>
+        </template>
+    </it-modal>
 </template>
 
 <script lang="ts">
@@ -94,21 +113,38 @@ import TaskView from '@/TaskView.vue';
 import {Household} from "@/models/Household";
 import {User} from "@/models/User";
 import {defineComponent, PropType} from "vue";
-import {TColorData} from 'equal-vue/src/components/colorpicker/types';
-import {Message} from "equal-vue";
+import HouseholdContextMenu from "@/HouseholdContextMenu.vue";
+import IntervalPicker from "@/IntervalPicker.vue";
+import {Message} from 'equal-vue';
 
 export default defineComponent({
     name: 'household-view',
     components: {
+        HouseholdContextMenu,
         TaskView,
+        IntervalPicker,
     },
     emits: [
         'change-color',
         'delete',
     ],
     data: () => ({
-        color: '#233662',
-        confirmModal: false,
+        newTaskModal: false,
+        newTaskIcon: {name: 'Haus', value: 'home'},
+        newTaskName: '',
+        newTaskInterval: 1,
+        loading: false,
+        taskIcons: [
+            ['Haus', 'home'],
+            ['Einkaufswagen', 'shopping_cart'],
+            ['Glühbirne', 'lightbulb'],
+            ['Uhr', 'schedule'],
+            ['Haustier', 'pets'],
+            ['Arbeit', 'work_outline'],
+            ['Telefon', 'call'],
+            ['Besen', 'cleaning_services'],
+            ['Waschmaschine', 'local_laundry_service'],
+        ].map(array => ({name: array[0], value: array[1]})),
     }),
     props: {
         household: Object as PropType<Household>,
@@ -118,41 +154,21 @@ export default defineComponent({
         isAdmin() {
             return this.user?.mail === this.household?.admin && null != this.household?.admin;
         },
+        color() {
+            return this.household?.color ?? '#233662';
+        },
         style() {
             return 'background-color: ' + this.color;
         },
     },
-    beforeMount() {
-        this.color = this.household?.color || this.color;
-    },
-    mounted() {
-        if (this.$refs.colorPicker) {
-            this.$watch(() => (this.$refs.colorPicker as any).show, (show: boolean) => {
-                if (!show && this.color !== this.household?.color) {
-                    this.$emit('change-color', this.color);
-                }
-            });
-        }
-    },
     methods: {
-        async generateAndCopyInvite() {
-            try {
-                if (null != this.household?.id) {
-                    const url = await window.client.fetchInviteLink(this.household.id);
-                    await navigator.clipboard.writeText(url);
-                    Message.success({text: 'Invite token copied successfully!'});
-                    console.log(url);
-                }
-            } catch (e) {
-                Message.danger({text: 'Error copying invite token: ' + e.toString()});
+        async addNewTask() {
+            if (null == this.household?.id) {
+                Message.error({text: 'There was a problem creating this task!'});
+                return;
             }
-        },
-        setColor(color: TColorData) {
-            this.color = color.hex;
-        },
-        deleteHousehold() {
-            this.confirmModal = false;
-            this.$emit('delete');
+            this.loading = true;
+            await window.client.addNewTask(this.household?.id, this.newTaskName, this.newTaskIcon.value, this.newTaskInterval);
         }
     }
 });
@@ -185,26 +201,42 @@ export default defineComponent({
     justify-content: center;
 }
 
-.icon-button {
+.household-footer {
+    margin-top: 8px;
+    padding: 8px;
     display: flex;
-    flex-direction: column;
-    justify-content: center;
-    cursor: pointer;
-    width: 40px;
+    flex-direction: row;
+    justify-content: right;
+    border-radius: 8px;
 }
 
-.item-danger {
-    background-color: #f93155;
-    color: white;
+.vertical-center {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
 }
 
+.padding-left {
+    margin-left: 8px;
+}
+
+.max-width {
+    width: 100%;
+}
+
+.dark-font {
+    color: black;
+}
 </style>
 
 <style>
-.w-100 {
-    overflow: visible !important;
-}
 .w-100 .it-dropdown-item {
     padding: 0;
+}
+.it-modal-body {
+    overflow: visible !important;
+}
+.it-modal-content {
+    overflow: visible !important;
 }
 </style>
