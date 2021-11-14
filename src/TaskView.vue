@@ -39,7 +39,7 @@ export default class TaskView extends Vue {
 
     get progress() {
         if (null == this.task!.lastComplete) {
-            return 0;
+            return null;
         }
         const durationInMs = this.task!.duration * 60 * 1000;
         const percentage = this.timeSinceLastCompleted / durationInMs * 100;
@@ -84,5 +84,8 @@ export default class TaskView extends Vue {
     flex-direction: column;
     justify-content: center;
     margin-left: 8px;
+}
+.row {
+    padding: 0;
 }
 </style>

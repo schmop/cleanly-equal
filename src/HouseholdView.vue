@@ -30,9 +30,8 @@
             v-if="isAdmin"
         >
             <it-button
-                class="dark-font"
                 icon="add"
-                type="default"
+                type="neutral"
                 @click="newTaskModal = true"
             >
                 Task hinzufügen
@@ -126,6 +125,7 @@ export default defineComponent({
     },
     emits: [
         'change-color',
+        'change',
         'delete',
     ],
     data: () => ({
@@ -169,6 +169,9 @@ export default defineComponent({
             }
             this.loading = true;
             await window.client.addNewTask(this.household?.id, this.newTaskName, this.newTaskIcon.value, this.newTaskInterval);
+            this.loading = false;
+            this.newTaskModal = false;
+            this.$emit('change');
         }
     }
 });
@@ -222,10 +225,6 @@ export default defineComponent({
 
 .max-width {
     width: 100%;
-}
-
-.dark-font {
-    color: black;
 }
 </style>
 

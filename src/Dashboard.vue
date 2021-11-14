@@ -19,6 +19,7 @@
                 :household="household"
                 @change-color="changeColor(household.id, $event)"
                 @delete="deleteHousehold(household.id)"
+                @change="fetchDashboardInfo"
             />
         </div>
     </template>

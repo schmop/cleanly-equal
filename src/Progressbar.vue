@@ -7,7 +7,7 @@
             <span class="overlay">{{ text }}</span>
             <div
                 class="it-progress-line"
-                :style="[{ width: `${progress}%` }, {'background-color': color}]"
+                :style="[{ width: `${progress ?? 100}%` }, {'background-color': color}]"
             >
             </div>
         </div>
@@ -34,14 +34,17 @@ import {Options, Vue} from 'vue-class-component';
 })
 
 export default class Progressbar extends Vue {
-    progress: number = 0;
+    progress: number|null = 0;
 
     get color() {
+        if (null === this.progress) {
+            return 'gray';
+        }
         const green = [51, 191, 0] as number[];
         const red = [191, 45, 0] as number[];
         const inverseProgress = 1 - (this.progress / 100);
         const mergedColor = green.map(
-            (val, index) => val * (this.progress / 100) + red[index] * inverseProgress
+            (val, index) => val * (this.progress ?? 0 / 100) + red[index] * inverseProgress
         );
 
         return `rgb(${mergedColor.join(', ')})`
